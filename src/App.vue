@@ -19,7 +19,7 @@ export default {
 </script>
 
 <style>
-body, html, head{
+body, html, head, ul, li{
   margin: 0;
   padding: 0;
 }

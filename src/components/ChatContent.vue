@@ -8,21 +8,25 @@
     </div>
 
     <div class="input-container">
-      <input v-model="message" @keyup.enter="sendMessage" placeholder="输入你的消息..." class="chat-input" />
-      <el-button size="large" @click="sendMessage" class="send-button">发送</el-button>
+      <input v-model="message" @keyup.enter="sendMessage" placeholder="输入你的消息..." class="chat-input"/>
+      <el-button v-if="!isReciving" size="large" @click="sendMessage" class="send-button">发送</el-button>
+      <el-button v-else size="large" type="primary" disabled>发送</el-button>
     </div>
   </div>
 </template>
 
 <script>
 import {marked} from "marked"
+import hljs from "highlight.js"
+import "highlight.js/styles/monokai-sublime.css"
 
 export default {
   data() {
     return {
       message: '',
       messages: [],
-      partialMsg: "Gemma：\n",  // 当前正在接收的消息
+      partialMsg: "# Gemma：\n",  // 当前正在接收的消息
+      isReciving: false,
     }
   },
   mounted() {
@@ -32,28 +36,50 @@ export default {
 
       if (this.messages.length === 0 || this.messages[this.messages.length - 1].endsWith("<end_of_turn>")) {
         this.messages.push(this.partialMsg);  // 开始新的消息
+
       } else {
         this.messages[this.messages.length - 1] = this.partialMsg;  // 更新当前正在显示的消息
       }
 
       if (msg.endsWith("<end_of_turn>")) {
         this.messages[this.messages.length - 1] = this.partialMsg.replace("<end_of_turn>", '');
-        this.partialMsg = 'Gemma：\n';  // 重置
+        this.partialMsg = '# Gemma：\n';  // 重置
+        this.isReciving = false
+
       }
     });
+    this.hanleHightLight()
+  },
+  updated() {
+    this.scrollToBottom()
   },
   methods: {
     sendMessage() {
       if (this.message.trim() !== '') {
-        this.messages.push("用户：\n"+this.message + "<end_of_turn>");
+        this.messages.push("用户：\n" + this.message + "<end_of_turn>");
+        this.isReciving = true
         this.$socket.send(this.message);
         this.message = '';
       }
     },
     renderMarkdown(msg) {
-      return marked(msg);
+      const rendered = marked(msg);
+      this.$nextTick(()=>{
+        this.hanleHightLight()
+      })
+      return rendered
+    },
+    scrollToBottom() {
+      const chatLog = this.$el.querySelector('.chat-log');
+      chatLog.scrollTop = chatLog.scrollHeight;
+    },
+    hanleHightLight(){
+      let blocks = document.querySelectorAll("pre code");
+      blocks.forEach((block) => {
+        hljs.highlightElement(block);
+      });
     }
-  }
+  },
 }
 
 </script>
@@ -79,7 +105,8 @@ export default {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   height: calc(100% - 50px - 2.5em - 10%);
 }
-.title{
+
+.title {
   font-size: 2em;
   line-height: 2.5em;
   font-weight: 600;
@@ -88,13 +115,12 @@ export default {
 .chat-log {
   list-style-type: none;
   padding: 0;
-  margin-bottom: 20px;
-  max-height: 400px;
+  height: 100%;
   overflow-y: auto;
 }
 
 .chat-message {
-  padding: 10px;
+  padding: 10px 10px 10px 30px;
   border-radius: 5px;
   margin-bottom: 10px;
   background-color: #ffffff;
@@ -135,11 +161,30 @@ export default {
 }
 
 .chat-log::-webkit-scrollbar {
-  width: 8px;
+  width: 2px;
 }
 
 .chat-log::-webkit-scrollbar-thumb {
   background-color: #007BFF;
+  border-radius: 4px;
+}
+
+.hljs {
+  background: #272822; /* Monokai 主题的背景色（黑色） */
+  color: #f8f8f2; /* Monokai 主题的文本颜色（白色） */
+  padding: 10px;
+  border-radius: 4px;
+  overflow-x: auto;
+  white-space: pre; /* 保持代码的空格和缩进 */
+}
+
+/* 代码块的滚动条样式 */
+.hljs::-webkit-scrollbar {
+  width: 8px;
+}
+
+.hljs::-webkit-scrollbar-thumb {
+  background-color: #444; /* 滚动条颜色 */
   border-radius: 4px;
 }
 </style>
