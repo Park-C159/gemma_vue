@@ -1,6 +1,6 @@
 <template>
-  <div id="app">
-    <h1>Gemma大模型</h1>
+  <div id="content">
+    <div class="title">Gemma大模型</div>
     <div class="chat-container">
       <ul class="chat-log">
         <li v-for="(msg, index) in messages" :key="index" v-html="renderMarkdown(msg)" class="chat-message"></li>
@@ -59,19 +59,30 @@ export default {
 </script>
 
 <style scoped>
-#app {
+#content {
+  padding: 20px;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   text-align: center;
-  margin-top: 40px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .chat-container {
-  width: 60%;
+  width: 100%;
   margin: 0 auto;
   background: #f9f9f9;
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  height: calc(100% - 50px - 2.5em - 10%);
+}
+.title{
+  font-size: 2em;
+  line-height: 2.5em;
+  font-weight: 600;
 }
 
 .chat-log {
@@ -93,9 +104,11 @@ export default {
 }
 
 .input-container {
-  width: 60%;
+  width: 100%;
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  height: 50px;
 }
 
 .chat-input {
