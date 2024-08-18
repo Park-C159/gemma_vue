@@ -1,6 +1,8 @@
 <template>
   <div id="content">
-    <div class="title">Gemma大模型</div>
+    <div class="title">
+      Gemma大模型
+    </div>
     <div class="chat-container">
       <ul class="chat-log">
         <li v-for="(msg, index) in messages" :key="index" v-html="renderMarkdown(msg)" class="chat-message"></li>
@@ -9,6 +11,8 @@
 
     <div class="input-container">
       <input v-model="message" @keyup.enter="sendMessage" placeholder="输入你的消息..." class="chat-input"/>
+      <el-button @click="refresh" size="large"><el-icon><Refresh /></el-icon></el-button>
+
       <el-button v-if="!isReciving" size="large" @click="sendMessage" class="send-button">发送</el-button>
       <el-button v-else size="large" type="primary" disabled>发送</el-button>
     </div>
@@ -19,6 +23,8 @@
 import {marked} from "marked"
 import hljs from "highlight.js"
 import "highlight.js/styles/monokai-sublime.css"
+import { Refresh } from '@element-plus/icons-vue'
+
 
 export default {
   data() {
@@ -29,6 +35,13 @@ export default {
       isReciving: false,
       isStop: true,
     }
+  },
+  components: {
+    Refresh,
+  },
+  created() {
+    this.loadHistory()
+
   },
   mounted() {
     // 监听 WebSocket 消息
@@ -58,6 +71,26 @@ export default {
   },
 
   methods: {
+    refresh(){
+      this.$axios.delete("/restart_chat").then((response) => {
+        let res = response.data;
+        console.log(res);
+        if (res.code === 200) {
+          this.messages = []
+        }
+      })
+    },
+    loadHistory() {
+      this.$axios.get("/history_chat").then((response) => {
+        let res = response.data;
+        if (res.code === 200){
+          this.messages = res.data;
+        }
+      }).catch((error) => {
+        console.log(error);
+      })
+    },
+
     stop_chat(){
       this.$axios.get("/stop_chat").then(res => {
         if (res.status === 200){
